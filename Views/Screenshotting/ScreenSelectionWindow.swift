@@ -46,11 +46,12 @@ class ScreenSelectionWindow: NSPanel {
         
         // Modify collection behavior
         collectionBehavior = [
+            .canJoinAllApplications,
+            .canJoinAllSpaces,
             .fullScreenAuxiliary,
             .stationary,
             .transient,
-            .ignoresCycle,
-            .moveToActiveSpace
+            .ignoresCycle
         ]
         
         isReleasedWhenClosed = false
