@@ -73,6 +73,16 @@ struct ScreenshotReviewView: View {
             }
     }
     
+    private func convertToViewCoordinates(_ rect: NSRect) -> CGRect {
+        // Convert from screen coordinates to view coordinates
+        CGRect(
+            x: rect.origin.x - screenFrame.origin.x,
+            y: screenFrame.height - (rect.origin.y - screenFrame.origin.y + rect.height),
+            width: rect.width,
+            height: rect.height
+        )
+    }
+    
     private func screenshotImage(_ viewRect: CGRect) -> some View {
         Image(nsImage: image)
             .resizable()
@@ -81,8 +91,8 @@ struct ScreenshotReviewView: View {
             .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
             .position(
                 x: viewRect.midX,
-                y: viewRect.midY - Constants.verticalOffset
-            )
+                y: viewRect.midY
+            ) // Removed the Constants.verticalOffset
             .shadow(radius: isShowingImage ? Constants.shadowRadius : 0)
     }
     
@@ -110,17 +120,6 @@ struct ScreenshotReviewView: View {
             )
             .offset(x: isShowingAnswer ? 0 : Constants.resultViewOffset)
             .allowsHitTesting(true)
-    }
-    
-    // MARK: - Helpers
-    
-    private func convertToViewCoordinates(_ rect: NSRect) -> CGRect {
-        CGRect(
-            x: rect.origin.x,
-            y: screenFrame.height - rect.maxY,
-            width: rect.width,
-            height: rect.height
-        )
     }
     
     private func animateViewAppearance() {

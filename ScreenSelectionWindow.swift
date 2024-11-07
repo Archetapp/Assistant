@@ -148,9 +148,19 @@ class ScreenSelectionWindow: NSPanel {
             let filter = SCContentFilter(display: display, excludingWindows: [])
             
             let configuration = SCStreamConfiguration()
+            
+            // Set up high resolution capture
             configuration.pixelFormat = kCVPixelFormatType_32BGRA
-            configuration.width = Int(display.width)
-            configuration.height = Int(display.height)
+            
+            // Use the display's native pixel dimensions
+            let scale = targetScreen.backingScaleFactor
+            configuration.width = Int(CGFloat(display.width) * scale)
+            configuration.height = Int(CGFloat(display.height) * scale)
+            
+            // Ensure we capture at full quality
+            configuration.scalesToFit = false
+            configuration.showsCursor = false
+            configuration.colorSpaceName = CGColorSpace.sRGB
             configuration.minimumFrameInterval = CMTime(value: 1, timescale: 60)
             configuration.queueDepth = 1
             
@@ -168,12 +178,12 @@ class ScreenSelectionWindow: NSPanel {
             if let sampleBuffer = await streamOutput?.captureNextFrame() {
                 let image = convertSampleBufferToNSImage(sampleBuffer: sampleBuffer)
                 
-                // Calculate selection rect relative to the target screen
+                // Calculate selection rect relative to the target screen and scale it
                 let relativeRect = NSRect(
-                    x: screenRect.origin.x - targetScreen.frame.origin.x,
-                    y: screenRect.origin.y - targetScreen.frame.origin.y,
-                    width: screenRect.width,
-                    height: screenRect.height
+                    x: (screenRect.origin.x - targetScreen.frame.origin.x) * scale,
+                    y: (screenRect.origin.y - targetScreen.frame.origin.y) * scale,
+                    width: screenRect.width * scale,
+                    height: screenRect.height * scale
                 )
                 
                 let croppedImage = image.flatMap { cropImage(image: $0, to: relativeRect, targetScreen: targetScreen) }
@@ -190,6 +200,34 @@ class ScreenSelectionWindow: NSPanel {
             await completeCapture(nil)
             try? await cleanup()
         }
+    }
+    
+    private func cropImage(image: NSImage, to rect: NSRect, targetScreen: NSScreen) -> NSImage? {
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+        
+        // Flip the Y coordinate since Core Graphics uses a different coordinate system
+        let flippedRect = NSRect(
+            x: rect.origin.x,
+            y: CGFloat(cgImage.height) - rect.origin.y - rect.height,
+            width: rect.width,
+            height: rect.height
+        )
+        
+        guard let croppedCGImage = cgImage.cropping(to: flippedRect) else {
+            return nil
+        }
+        
+        // Create high-resolution image
+        let finalImage = NSImage(cgImage: croppedCGImage, size: NSSize(
+            width: rect.width / targetScreen.backingScaleFactor,
+            height: rect.height / targetScreen.backingScaleFactor
+        ))
+        
+        // Ensure image maintains its resolution
+        finalImage.size = finalImage.size
+        return finalImage
     }
     
     private func cleanup() async throws {
@@ -239,26 +277,6 @@ class ScreenSelectionWindow: NSPanel {
         }
         
         return NSImage(cgImage: cgImage, size: NSSize(width: width, height: height))
-    }
-    
-    private func cropImage(image: NSImage, to rect: NSRect, targetScreen: NSScreen) -> NSImage? {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            return nil
-        }
-        
-        // Flip the Y coordinate since Core Graphics uses a different coordinate system
-        let flippedRect = NSRect(
-            x: rect.origin.x,
-            y: targetScreen.frame.height - rect.origin.y - rect.height,
-            width: rect.width,
-            height: rect.height
-        )
-        
-        guard let croppedCGImage = cgImage.cropping(to: flippedRect) else {
-            return nil
-        }
-        
-        return NSImage(cgImage: croppedCGImage, size: rect.size)
     }
 }
 

@@ -94,49 +94,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func showReviewWindow(image: NSImage, rect: NSRect) {
-        guard let screen = NSScreen.main else { return }
-        
-        let window = NSPanel(
-            contentRect: screen.frame,
-            styleMask: [.borderless, .nonactivatingPanel],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.backgroundColor = .clear
-        window.isOpaque = false
-        window.hasShadow = false
-        window.isMovable = false
-        window.isFloatingPanel = true
-        window.becomesKeyOnlyIfNeeded = true
-        
-        // Set the window level to the highest possible level
-        window.level = .floating
-        
-        // Modify collection behavior
-        window.collectionBehavior = [
-            .fullScreenAuxiliary,
-            .stationary,
-            .transient,
-            .ignoresCycle,
-            .moveToActiveSpace
-        ]
-        
-        let contentView = ScreenshotReviewView(
-            image: image,
-            rect: rect,
-            screenFrame: screen.frame
-        )
-        
         self.closeReviewWindow()
         
-        let windowController = NSWindowController(window: window)
-        window.contentView = NSHostingView(rootView: contentView)
+        let panel = ScreenshotReviewPanel(image: image, rect: rect)
+        let windowController = NSWindowController(window: panel)
         
-        reviewWindow = window
+        reviewWindow = panel
         reviewWindowController = windowController
         
-        window.makeKeyAndOrderFront(nil)
+        panel.makeKeyAndOrderFront(nil)
+        panel.makeKey()
     }
-
 }
