@@ -66,7 +66,7 @@ final class ImageAnalysisProcessor {
             update: update
         )
     }
-    
+            
     // MARK: - Private Methods
     
     private func convertImageToPNGData(_ image: NSImage) throws -> Data {

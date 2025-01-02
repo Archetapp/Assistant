@@ -179,7 +179,6 @@ class ScreenSelectionWindow: NSPanel {
             if let sampleBuffer = await streamOutput?.captureNextFrame() {
                 let image = convertSampleBufferToNSImage(sampleBuffer: sampleBuffer)
                 
-                // Calculate selection rect relative to the target screen and scale it
                 let relativeRect = NSRect(
                     x: (screenRect.origin.x - targetScreen.frame.origin.x) * scale,
                     y: (screenRect.origin.y - targetScreen.frame.origin.y) * scale,
@@ -208,7 +207,6 @@ class ScreenSelectionWindow: NSPanel {
             return nil
         }
         
-        // Flip the Y coordinate since Core Graphics uses a different coordinate system
         let flippedRect = NSRect(
             x: rect.origin.x,
             y: CGFloat(cgImage.height) - rect.origin.y - rect.height,
@@ -220,7 +218,6 @@ class ScreenSelectionWindow: NSPanel {
             return nil
         }
         
-        // Create high-resolution image
         let finalImage = NSImage(cgImage: croppedCGImage, size: NSSize(
             width: rect.width / targetScreen.backingScaleFactor,
             height: rect.height / targetScreen.backingScaleFactor

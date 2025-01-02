@@ -24,7 +24,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func setupMenuBar() {
-        // Create the status item in the menu bar
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem.button {
@@ -33,7 +32,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.target = self
         }
         
-        // Create and configure the popover
         popover = NSPopover()
         popover.contentSize = NSSize(width: 300, height: 400)
         popover.behavior = .transient
@@ -60,7 +58,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func showPopover(_ sender: NSView) {
-        // Close review window if it's open
         closeReviewWindow()
         popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
     }
@@ -70,9 +67,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func captureScreenSelection() {
-        // Ensure previous window is properly closed before creating a new one
         closeReviewWindow()
-        closePopover() // Also close popover if it's open
+        closePopover()
         
         let selectionWindow = ScreenSelectionWindow()
         selectionWindow.beginSelection { [weak self] image in
